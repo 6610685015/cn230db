@@ -64,15 +64,38 @@ print("-------------------Total games from every genre---------------------")
 for row in cur.execute("SELECT trim(genre), count(id) as count_id FROM games group by trim(genre) order by count_id desc"):
     print(row)
 
+print("-------------------Genre Distribution (%)---------------------")
+total_count = cur.execute("SELECT COUNT(*) FROM games").fetchone()[0]
+
+for row in cur.execute("SELECT trim(genre), COUNT(id) FROM games GROUP BY trim(genre) ORDER BY COUNT(id) DESC"):
+    genre, count = row
+    percent = (count / total_count) * 100
+    print(f"{genre}: {count} games ({percent:.2f}%)")
+
+
 print("-------------------Total games from every platform---------------------")
 # Count games type for every game platform and resolve space in name by accident using trim
 for row in cur.execute("SELECT trim(platform), count(id) as count_id FROM games group by trim(platform) order by count_id desc"):
     print(row)
 
+print("-------------------Platform Distribution (%)---------------------")
+for row in cur.execute("SELECT trim(platform), COUNT(id) FROM games GROUP BY trim(platform) ORDER BY COUNT(id) DESC"):
+    platform, count = row
+    percent = (count / total_count) * 100
+    print(f"{platform}: {count} games ({percent:.2f}%)")
+
+
 print("-------------------Total games from every developer---------------------")
 # Count games type for every game developer and resolve space in name by accident using trim
 for row in cur.execute("SELECT trim(developer), count(id) as count_id FROM games group by trim(developer) order by count_id desc"):
     print(row)
+
+print("-------------------Publisher Distribution (%)---------------------")
+for row in cur.execute("SELECT trim(publisher), COUNT(id) FROM games GROUP BY trim(publisher) ORDER BY COUNT(id) DESC"):
+    publisher, count = row
+    percent = (count / total_count) * 100
+    print(f"{publisher}: {count} games ({percent:.2f}%)")
+    
 
 print("-------------------Total games from every publisher---------------------")
 # Count games type for every game publisher and resolve space in name by accident using trim
@@ -82,6 +105,14 @@ for row in cur.execute("SELECT trim(publisher), count(id) as count_id FROM games
 print("-------------------Total games from every year---------------------")
 for row in cur.execute("SELECT strftime('%Y', release_date) AS year, COUNT(id) as count_id FROM games GROUP BY year ORDER BY year desc"):
     print(row)
+
+print("-------------------Game Genre Distribution (%)---------------------")
+total_count = cur.execute("SELECT COUNT(*) FROM games").fetchone()[0]
+
+for row in cur.execute("SELECT trim(genre), COUNT(id) as count_id FROM games GROUP BY trim(genre) ORDER BY count_id DESC"):
+    genre, count = row
+    percent = (count / total_count) * 100
+    print(f"{genre}: {count} games ({percent:.2f}%)")
 
 
 
@@ -109,8 +140,8 @@ while Loop:
         search_conditions = {}
 
         while True:
-            search_type = input("What to search? (genre, platform, developer, publisher, year): ").lower()
-            if search_type in ["genre", "platform", "developer", "publisher", "year"]:
+            search_type = input("What to search? (genre, platform, developer, publisher, year, title): ").lower()
+            if search_type in ["genre", "platform", "developer", "publisher", "year", "title"]:
                 if search_type not in search_conditions:
                     value = input(f"Enter {search_type} you want to find: ")
                     search_conditions[search_type] = value
@@ -131,9 +162,13 @@ while Loop:
         for key, val in search_conditions.items():
             if key == "year":
                 where_clauses.append("strftime('%Y', release_date) = ?")
+                values.append(val)
+            elif key == "title":
+                where_clauses.append("title LIKE ?")
+                values.append(f"%{val}%")
             else:
                 where_clauses.append(f"{key} = ?")
-            values.append(val)
+                values.append(val)
 
         if where_clauses:
             query = base_query + " WHERE " + " AND ".join(where_clauses) + f" ORDER BY {current_sort} ASC"
@@ -146,12 +181,15 @@ while Loop:
         print("Tables in database:", tables)
         cur.execute(query, values)
         results = cur.fetchall()
+        
 
         # Show results
         if results:
             print(f"\n------ Search Results ({len(results)} games found, sorted by {current_sort}) ------")
             for row in results:
                 print(row)
+
+            
         else:
             print("\nNo games found with the specified conditions.")
 

@@ -123,10 +123,12 @@ while Loop:
     print("\n------------------Search or Sort----------------------")
     mode = input("Choose mode: (search / sort / exit): ").lower()
 
+    # If user type exit the program will stop
     if mode == "exit":
         print("Thank you for using the game search system!")
         break
 
+    # Sort data by (defial is sort by id)
     elif mode == "sort":
         sort_field = input("Sort by (id, genre, platform, developer, publisher, release_date): ").lower()
         if sort_field in ["id", "genre", "platform", "developer", "publisher", "release_date"]:
@@ -139,6 +141,7 @@ while Loop:
         # Store various search values
         search_conditions = {}
 
+        # Ask user what they want to search for
         while True:
             search_type = input("What to search? (genre, platform, developer, publisher, year, title): ").lower()
             if search_type in ["genre", "platform", "developer", "publisher", "year", "title"]:
@@ -159,6 +162,7 @@ while Loop:
         where_clauses = []
         values = []
 
+        # prepare "where_clauses" for using in next step for searching
         for key, val in search_conditions.items():
             if key == "year":
                 where_clauses.append("strftime('%Y', release_date) = ?")
@@ -170,12 +174,13 @@ while Loop:
                 where_clauses.append(f"{key} = ?")
                 values.append(val)
 
+        # Set value of query in SQL form for using in serch
         if where_clauses:
             query = base_query + " WHERE " + " AND ".join(where_clauses) + f" ORDER BY {current_sort} ASC"
         else:
             query = base_query + f" ORDER BY {current_sort} ASC"
 
-        # Pull search results
+        # Pull wanted search results from input
         cur.execute("SELECT name FROM sqlite_master WHERE type='table'")
         tables = cur.fetchall()
         print("Tables in database:", tables)
@@ -189,10 +194,10 @@ while Loop:
             for row in results:
                 print(row)
 
-            
+        # if there no search result found
         else:
             print("\nNo games found with the specified conditions.")
-
+    #ask user if they want to continus or not
     else:
         print("Invalid mode. Please choose 'search', 'sort', or 'exit'.")
 
